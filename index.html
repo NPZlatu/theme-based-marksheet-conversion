@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marks Distribution</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            color: #FFF;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #222;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .form-container {
+            width: 80%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #FFF;
+            font-size: 1.5em;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #AAA;
+            font-size: 0.8em;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            box-sizing: border-box;
+            background-color: #333;
+            color: #FFF;
+            font-size: 0.9em;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            color: #FFF;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .result {
+            margin-top: 20px;
+            display: none;
+            width: 100%;
+        }
+
+        .result h2,
+        .result h3 {
+            text-align: center;
+            color: #FFF;
+            font-size: 1.2em;
+        }
+
+        .result table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 0.8em;
+        }
+
+        .result th,
+        .result td {
+            border: 1px solid #555;
+            padding: 3px;
+            text-align: center;
+        }
+
+        .result th {
+            background-color: #444;
+        }
+
+        .result-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .result-buttons button {
+            width: 48%;
+            font-size: 0.9em;
+        }
+
+        .toast {
+            background-color: #ff0000;
+            color: #FFF;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        @media screen and (max-width: 768px) {
+            .result div {
+                width: 100%;
+                margin-bottom: 20px;
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .result div table {
+                width: 90%;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container" id="container">
+        <div id="form-container" class="form-container">
+            <div class="form-group">
+                <label for="class">Class</label>
+                <select id="class" onchange="updateChapters()" required>
+                    <option value="3" selected>Class 3</option>
+                    <option value="1">Class 1</option>
+                    <option value="2">Class 2</option>
+                    <option value="4">Class 4</option>
+                    <option value="5">Class 5</option>
+                    <option value="6">Class 6</option>
+                    <option value="7">Class 7</option>
+                    <option value="8">Class 8</option>
+                    <option value="9">Class 9</option>
+                    <option value="10">Class 10</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="studentName">Student Name</label>
+                <input type="text" id="studentName" required>
+            </div>
+            <div class="form-group">
+                <label for="rollNumber">Roll Number</label>
+                <input type="text" id="rollNumber" required>
+            </div>
+            <div class="form-group">
+                <label for="totalMarksNepali">Total Marks Obtained in Nepali (out of 100)</label>
+                <input type="number" id="totalMarksNepali" min="0" max="100" required>
+            </div>
+            <div class="form-group"><label for="totalMarksMath">Total Marks Obtained in Math (out of 100)</label>
+                <input type="number" id="totalMarksMath" min="0" max="100" required>
+            </div>
+            <div class="form-group">
+                <label for="totalMarksEnglish">Total Marks Obtained in English (out of 100)</label>
+                <input type="number" id="totalMarksEnglish" min="0" max="100" required>
+            </div>
+
+            <div class="form-group">
+                <label for="totalMarksSerofero">Total Marks Obtained in Serofero (out of 100)</label>
+                <input type="number" id="totalMarksSerofero" min="0" max="100" required>
+            </div>
+            <button onclick="calculateMarks()">Calculate</button>
+            <div id="toast" class="toast"></div>
+        </div>
+
+        <div class="result" id="result-container">
+            <div id="result"></div>
+            <div class="result-buttons hide-print">
+                <button onclick="goBack()">Back</button>
+                <button onclick="printDiv()">Print</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const nepaliChapters = [
+            { theme: "Ma ra Mero Pariwar", creditPoints: 11, fullMarks: 44 },
+            { theme: "Mero Dainik Jiwan", creditPoints: 13, fullMarks: 52 },
+            { theme: "Hamro samudaya", creditPoints: 15, fullMarks: 60 },
+            { theme: "Hamro Bidhyalaya", creditPoints: 17, fullMarks: 68 },
+            { theme: "Hamro Batabaran", creditPoints: 18, fullMarks: 72 },
+            { theme: "Mero Srijana", creditPoints: 19, fullMarks: 76 },
+            { theme: "Ruchi ra Baani", creditPoints: 20, fullMarks: 80 },
+            { theme: "Hamro Sanskriti", creditPoints: 22, fullMarks: 88 },
+            { theme: "Sanchar, Prabidhi ra Bajaar", creditPoints: 22, fullMarks: 88 },
+            { theme: "Hamro Kriyakalab", creditPoints: 22, fullMarks: 88 },
+            { theme: "Hamro Worapara ko Sansaar", creditPoints: 22, fullMarks: 88 }
+        ];
+
+        const mathChapters = [
+            { theme: "Mero Dainik Jiwan", creditPoints: 3, fullMarks: 12 },
+            { theme: "Hamro samudaya", creditPoints: 6, fullMarks: 24 },
+            { theme: "Mero Srijana", creditPoints: 6, fullMarks: 24 },
+            { theme: "Sanchaar Prabidhi ra Bajaar", creditPoints: 10, fullMarks: 40 },
+            { theme: "Sanckhya ko Gyan", creditPoints: 6, fullMarks: 24 },
+            { theme: "Gadit ko Adharbhut Kriyakalab", creditPoints: 5, fullMarks: 20 },
+            { theme: "Naap", creditPoints: 1, fullMarks: 4 }
+        ];
+
+        const englishChapters = [
+            { theme: "Me and My Family", creditPoints: 26, fullMarks: 104 },
+            { theme: "My Daily Life", creditPoints: 23, fullMarks: 92 },
+            { theme: "My School", creditPoints: 22, fullMarks: 88 },
+            { theme: "Our Environment", creditPoints: 24, fullMarks: 96 },
+            { theme: "My Belongings", creditPoints: 20, fullMarks: 80 },
+            { theme: "Our Culture", creditPoints: 25, fullMarks: 100 },
+            { theme: "Communication, Tech. and Market", creditPoints: 27, fullMarks: 108 },
+            { theme: "Fruits, & Vegetables", creditPoints: 26, fullMarks: 104 },
+            { theme: "Hobbies & Interests", creditPoints: 24, fullMarks: 96 },
+            { theme: "Birds & Animals", creditPoints: 19, fullMarks: 76 },
+        ];
+
+        const seoFeroChapters = [
+            { theme: "Ma ra Mero Pariwar", creditPoints: 6, fullMarks: 24 },
+            { theme: "Mero Dainik Jiwan", creditPoints: 3, fullMarks: 12 },
+            { theme: "Hamro samudaya", creditPoints: 4, fullMarks: 16 },
+            { theme: "Hamro Bidhyalaya", creditPoints: 4, fullMarks: 16 },
+            { theme: "Hamro Waraparako Sajibharu", creditPoints: 2, fullMarks: 8 },
+            { theme: "Mero Srijana", creditPoints: 2, fullMarks: 8 },
+            { theme: "Ruchi ra Baani", creditPoints: 2, fullMarks: 8 },
+            { theme: "Hamro Sanskriti", creditPoints: 1, fullMarks: 4 },
+            { theme: "Sanchar, Prabidhi ra Bajaar", creditPoints: 2, fullMarks: 8 },
+            { theme: "Hamro Worapara ko Sansaar", creditPoints: 4, fullMarks: 16 },
+        ];
+
+        function distributeMarks(totalMarks, chapters, totalFullMarks) {
+            const equivalentMarks = (totalMarks / 100) * totalFullMarks;
+            const roundedMarks = Math.round(equivalentMarks);
+
+            let remainingMarks = roundedMarks;
+            let marksDistribution = chapters.map(chapter => {
+                const obtainedMarks = Math.floor((chapter.fullMarks / totalFullMarks) * roundedMarks);
+                remainingMarks -= obtainedMarks;
+                return { ...chapter, obtainedMarks };
+            });
+
+            for (let i = 0; remainingMarks > 0; i = (i + 1) % chapters.length) {
+                marksDistribution[i].obtainedMarks += 1;
+                remainingMarks -= 1;
+            }
+
+            return marksDistribution;
+        }
+
+        function calculateMarks() {
+            const studentName = document.getElementById('studentName').value;
+            const rollNumber = document.getElementById('rollNumber').value;
+            const selectedClass = document.getElementById('class').value;
+            const totalMarksNepali = parseInt(document.getElementById('totalMarksNepali').value);
+            const totalMarksMath = parseInt(document.getElementById('totalMarksMath').value);
+            const totalMarksEnglish = parseInt(document.getElementById('totalMarksEnglish').value);
+            const totalMarksSerofero = parseInt(document.getElementById('totalMarksSerofero').value);
+
+
+            if (selectedClass != 3) {
+                const toastMessage = `For selected Class ${selectedClass}, this feature is disabled. To enable this, you need to pay Rs. 500 to 9841025133`;
+                document.getElementById('toast').innerText = toastMessage;
+                document.getElementById('toast').style.display = 'block';
+                return;
+            } else {
+                document.getElementById('toast').style.display = 'none';
+            }
+            if (!studentName || !rollNumber || isNaN(totalMarksNepali) || isNaN(totalMarksMath) || isNaN(totalMarksEnglish)
+                || isNaN(totalMarksSerofero)
+            ) {
+                alert('Please fill out all fields correctly.');
+                return;
+            }
+
+            let distributedMarksNepali = distributeMarks(totalMarksNepali, nepaliChapters, 804);
+            let distributedMarksMath = distributeMarks(totalMarksMath, mathChapters, 148);
+            let distributedMarksEnglish = distributeMarks(totalMarksEnglish, englishChapters, 944);
+            let distributedMarksSeroFero = distributeMarks(totalMarksSerofero, seoFeroChapters, 120);
+
+
+            let resultHtml = `<h3>Marks of Class: ${selectedClass} | Name: ${studentName} | Roll: ${rollNumber}</h3>`;
+            resultHtml += `<div style="display: flex; justify-content: space-between;">`;
+
+            resultHtml += `<div style="width: 50%;"><h3>Nepali</h3>`;
+            resultHtml += `<table>`;
+            resultHtml += `<tr><th>S.N.</th><th>Theme</th><th>Credit Points</th><th>Full Marks</th><th>Obtained Marks</th></tr>`;
+            distributedMarksNepali.forEach((chapter, index) => {
+                resultHtml += `<tr><td>${index + 1}</td><td>${chapter.theme}</td><td>${chapter.creditPoints}</td><td>${chapter.fullMarks}</td><td>${chapter.obtainedMarks}</td></tr>`;
+            });
+            resultHtml += `<tr><td colspan="4">Total</td><td>${distributedMarksNepali.reduce((acc, chapter) => acc + chapter.obtainedMarks, 0)}</td></tr>`;
+            resultHtml += `</table>`;
+            resultHtml += `</div>`;
+
+            resultHtml += `<div style="width: 50%;"><h3>Math</h3>`;
+            resultHtml += `<table>`;
+            resultHtml += `<tr><th>S.N.</th><th>Theme</th><th>Credit Points</th><th>Full Marks</th><th>Obtained Marks</th></tr>`;
+            distributedMarksMath.forEach((chapter, index) => {
+                resultHtml += `<tr><td>${index + 1}</td><td>${chapter.theme}</td><td>${chapter.creditPoints}</td><td>${chapter.fullMarks}</td><td>${chapter.obtainedMarks}</td></tr>`;
+            });
+            resultHtml += `<tr><td colspan="4">Total</td><td>${distributedMarksMath.reduce((acc, chapter) => acc + chapter.obtainedMarks, 0)}</td></tr>`;
+            resultHtml += `</table>`;
+            resultHtml += `</div>`;
+
+            resultHtml += `<div style="width: 50%;"><h3>English</h3>`;
+            resultHtml += `<table>`;
+            resultHtml += `<tr><th>S.N.</th><th>Theme</th><th>Credit Points</th><th>Full Marks</th><th>Obtained Marks</th></tr>`;
+            distributedMarksEnglish.forEach((chapter, index) => {
+                resultHtml += `<tr><td>${index + 1}</td><td>${chapter.theme}</td><td>${chapter.creditPoints}</td><td>${chapter.fullMarks}</td><td>${chapter.obtainedMarks}</td></tr>`;
+            });
+            resultHtml += `<tr><td colspan="4">Total</td><td>${distributedMarksEnglish.reduce((acc, chapter) => acc + chapter.obtainedMarks, 0)}</td></tr>`;
+            resultHtml += `</table>`;
+            resultHtml += `</div>`;
+
+            resultHtml += `<div style="width: 50%;"><h3>Serofero</h3>`;
+            resultHtml += `<table>`;
+            resultHtml += `<tr><th>S.N.</th><th>Theme</th><th>Credit Points</th><th>Full Marks</th><th>Obtained Marks</th></tr>`;
+            distributedMarksSeroFero.forEach((chapter, index) => {
+                resultHtml += `<tr><td>${index + 1}</td><td>${chapter.theme}</td><td>${chapter.creditPoints}</td><td>${chapter.fullMarks}</td><td>${chapter.obtainedMarks}</td></tr>`;
+            });
+            resultHtml += `<tr><td colspan="4">Total</td><td>${distributedMarksSeroFero.reduce((acc, chapter) => acc + chapter.obtainedMarks, 0)}</td></tr>`;
+            resultHtml += `</table>`;
+            resultHtml += `</div>`;
+
+            resultHtml += `</div>`;
+            document.getElementById('result').innerHTML = resultHtml;
+            document.getElementById('form-container').style.display = 'none';
+            document.getElementById('result-container').style.display = 'block';
+        }
+
+        function goBack() {
+            document.getElementById('form-container').style.display = 'block';
+            document.getElementById('result-container').style.display = 'none';
+        }
+
+        function updateChapters() {
+            const selectedClass = document.getElementById('class').value;
+
+            if (selectedClass != 3) {
+                const toastMessage = `For selected Class ${selectedClass}, this feature is disabled. To enable this, you need to pay Rs. 500 to 9841025133`;
+                document.getElementById('toast').innerText = toastMessage;
+                document.getElementById('toast').style.display = 'block';
+                return;
+            } else {
+                document.getElementById('toast').style.display = 'none';
+            }
+        }
+
+        function printDiv() {
+            var element = document.getElementById('result-container');
+
+            var elementsToHide = element.querySelectorAll('.hide-print');
+            elementsToHide.forEach(function (element) {
+                element.style.display = 'none';
+            });
+            window.print();
+
+            elementsToHide.forEach(function (element) {
+                element.style.display = 'block';
+            });
+
+        }
+
+    </script>
+</body>
+
+</html>
